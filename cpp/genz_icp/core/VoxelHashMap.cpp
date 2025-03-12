@@ -42,21 +42,81 @@ struct ResultTuple {
     std::vector<Eigen::Vector3d> source;
     std::vector<Eigen::Vector3d> target;
 };
+}  // namespace
 
+namespace {
 static const std::array<Eigen::Vector3i, 27> voxel_shifts{
-    Eigen::Vector3i(0, 0, 0),   Eigen::Vector3i(1, 0, 0),   Eigen::Vector3i(-1, 0, 0),
-    Eigen::Vector3i(0, 1, 0),   Eigen::Vector3i(0, -1, 0),  Eigen::Vector3i(0, 0, 1),
-    Eigen::Vector3i(0, 0, -1),  Eigen::Vector3i(1, 1, 0),   Eigen::Vector3i(1, -1, 0),
-    Eigen::Vector3i(-1, 1, 0),  Eigen::Vector3i(-1, -1, 0), Eigen::Vector3i(1, 0, 1),
-    Eigen::Vector3i(1, 0, -1),  Eigen::Vector3i(-1, 0, 1),  Eigen::Vector3i(-1, 0, -1),
-    Eigen::Vector3i(0, 1, 1),   Eigen::Vector3i(0, 1, -1),  Eigen::Vector3i(0, -1, 1),
-    Eigen::Vector3i(0, -1, -1), Eigen::Vector3i(1, 1, 1),   Eigen::Vector3i(1, 1, -1),
-    Eigen::Vector3i(1, -1, 1),  Eigen::Vector3i(1, -1, -1), Eigen::Vector3i(-1, 1, 1),
-    Eigen::Vector3i(-1, 1, -1), Eigen::Vector3i(-1, -1, 1), Eigen::Vector3i(-1, -1, -1)
-};
+    {Eigen::Vector3i{0, 0, 0},   Eigen::Vector3i{1, 0, 0},   Eigen::Vector3i{-1, 0, 0},  Eigen::Vector3i{0, 1, 0},   Eigen::Vector3i{0, -1, 0},
+    Eigen::Vector3i{0, 0, 1},   Eigen::Vector3i{0, 0, -1},  Eigen::Vector3i{1, 1, 0},   Eigen::Vector3i{1, -1, 0},  Eigen::Vector3i{-1, 1, 0},
+    Eigen::Vector3i{-1, -1, 0}, Eigen::Vector3i{1, 0, 1},   Eigen::Vector3i{1, 0, -1},  Eigen::Vector3i{-1, 0, 1},  Eigen::Vector3i{-1, 0, -1},
+    Eigen::Vector3i{0, 1, 1},   Eigen::Vector3i{0, 1, -1},  Eigen::Vector3i{0, -1, 1},  Eigen::Vector3i{0, -1, -1}, Eigen::Vector3i{1, 1, 1},
+    Eigen::Vector3i{1, 1, -1},  Eigen::Vector3i{1, -1, 1},  Eigen::Vector3i{1, -1, -1}, Eigen::Vector3i{-1, 1, 1},  Eigen::Vector3i{-1, 1, -1},
+    Eigen::Vector3i{-1, -1, 1}, Eigen::Vector3i{-1, -1, -1}}};
 }  // namespace
 
 namespace genz_icp {
+
+std::tuple<Eigen::Vector3d, size_t, Eigen::Matrix3d, double> VoxelHashMap::GetClosestNeighbor(
+    const Eigen::Vector3d &query) const {
+    Eigen::Vector3d closest_neighbor = Eigen::Vector3d::Zero();
+    Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
+    Eigen::Matrix3d covariance = Eigen::Matrix3d::Zero();
+
+    double closest_distance = std::numeric_limits<double>::max();
+    size_t n_neighbors = 0;
+    
+    auto kx = static_cast<int>(query.x() / voxel_size_);
+    auto ky = static_cast<int>(query.y() / voxel_size_);
+    auto kz = static_cast<int>(query.z() / voxel_size_);
+
+    std::for_each(voxel_shifts.cbegin(), voxel_shifts.cend(), [&](const auto &voxel_shift) {
+        Voxel voxel(kx+voxel_shift.x(), ky+voxel_shift.y(), kz+voxel_shift.z());
+        auto search = map_.find(voxel);
+        if (search != map_.end()) {
+            const auto &points = search->second.points;
+            std::for_each(points.cbegin(), points.cend(), [&](const auto &neighbor){
+                double distance = (neighbor - query).norm();
+                if (distance < closest_distance){
+                    closest_neighbor = neighbor;
+                    closest_distance = distance;
+                }
+                centroid += neighbor;
+                covariance += neighbor*neighbor.transpose();
+                n_neighbors++;
+            }
+        );
+        }
+    });
+
+    if (n_neighbors>=1){
+        centroid /= static_cast<double>(n_neighbors);
+        covariance /= static_cast<double>(n_neighbors);
+
+        covariance -= centroid*centroid.transpose();
+    }
+    return std::make_tuple(closest_neighbor, n_neighbors, covariance, closest_distance);
+}
+
+
+std::pair<bool, Eigen::Vector3d> VoxelHashMap::DeterminePlanarity(
+    const Eigen::Matrix3d &covariance) const{
+    Eigen::Vector3d normal = Eigen::Vector3d::Zero();
+    // Compute the normal as the eigenvector of the smallest eigenvalue
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(covariance, Eigen::ComputeEigenvectors);
+    normal = solver.eigenvectors().col(0);
+    normal = normal.normalized();
+
+    // Planarity check
+    const auto &eigenvalues = solver.eigenvalues();
+    double lambda3 = eigenvalues[0];
+    double lambda2 = eigenvalues[1];
+    double lambda1 = eigenvalues[2];
+
+    // Check if the surface is planar
+    bool is_planar = (lambda3 / (lambda1 + lambda2 + lambda3)) < planarity_threshold_;
+
+    return {is_planar, normal};
+}
 
 VoxelHashMap::Vector3dVectorTuple7 VoxelHashMap::GetCorrespondences(
     const Vector3dVector &points, double max_correspondance_distance) const {
@@ -97,78 +157,25 @@ VoxelHashMap::Vector3dVectorTuple7 VoxelHashMap::GetCorrespondences(
             const Eigen::Vector3d &point = points[i];
 
             // Variables for the closest neighbor search & normal estimation
-            Eigen::Vector3d closest_neighbor = Eigen::Vector3d::Zero();
-            double closest_distance2 = std::numeric_limits<double>::max();
-            std::vector<Eigen::Vector3d> neighbors;
-            neighbors.reserve(27 * max_points_per_voxel_); 
-            auto kx = static_cast<int>(point[0] / voxel_size_);
-            auto ky = static_cast<int>(point[1] / voxel_size_);
-            auto kz = static_cast<int>(point[2] / voxel_size_);
-            Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
-
-            // Search in the neighboring voxels
-            for (const auto &shift : voxel_shifts) {
-                Voxel voxel(kx + shift[0], ky + shift[1], kz + shift[2]);
-                auto search = map_.find(voxel);
-                if (search != map_.end()) {
-                    const auto &voxel_points = search->second.points;
-                    for (const auto &voxel_point : voxel_points) {
-                        double distance = (voxel_point - point).norm();
-                        if (distance < closest_distance2) {
-                            closest_neighbor = voxel_point;
-                            closest_distance2 = distance;
-                        }
-                        neighbors.emplace_back(voxel_point);
-                        centroid += voxel_point;
-                    }
-                }
-            }
-
-            if (closest_distance2 > max_correspondance_distance) continue;
+            const auto &[closest_neighbor, n_neighbors, covariance, closest_distance] = GetClosestNeighbor(point);
+            if (closest_distance > max_correspondance_distance) continue;
             
             const size_t min_neighbors_for_normal_estimation = 5; 
-            if (neighbors.size() >= min_neighbors_for_normal_estimation){
-
-                // Estimate normal using neighboring points
-                Eigen::Vector3d normal = Eigen::Vector3d::Zero();
-                Eigen::Matrix3d covariance = Eigen::Matrix3d::Zero();
-
-                // Calculate the centroid of the neighbors
-                centroid /= static_cast<double>(neighbors.size());
-
-                // Calculate the covariance matrix
-                for (const auto &neighbor : neighbors) {
-                    Eigen::Vector3d centered = neighbor - centroid;
-                    covariance += centered * centered.transpose();
-                }
-                covariance /= static_cast<double>(neighbors.size());
-
-                // Compute the normal as the eigenvector of the smallest eigenvalue
-                Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(covariance, Eigen::ComputeEigenvectors);
-                normal = solver.eigenvectors().col(0);
-                normal = normal.normalized();
-
-                // Planarity check
-                const auto &eigenvalues = solver.eigenvalues();
-                double lambda3 = eigenvalues[0];
-                double lambda2 = eigenvalues[1];
-                double lambda1 = eigenvalues[2];
-
-                // Check if the surface is planar
-                bool is_planar = (lambda3 / (lambda1 + lambda2 + lambda3)) < planarity_threshold_;
+            if (n_neighbors >= min_neighbors_for_normal_estimation){
+                const auto &[is_planar, normal] = DeterminePlanarity(covariance);
 
                 if(is_planar){
                     result.source.emplace_back(point);
                     result.target.emplace_back(closest_neighbor);
                     result.normals.emplace_back(normal);
                     result.planar_count++;
-                } else if (closest_distance2 < max_correspondance_distance){
+                } else if (closest_distance < max_correspondance_distance){
                     result.non_planar_source.emplace_back(point);
                     result.non_planar_target.emplace_back(closest_neighbor);
                     result.non_planar_count++;
                 }
             } 
-            else if (closest_distance2 < max_correspondance_distance){
+            else if (closest_distance < max_correspondance_distance){
                     result.non_planar_source.emplace_back(point);
                     result.non_planar_target.emplace_back(closest_neighbor);
                     result.non_planar_count++;
@@ -177,6 +184,7 @@ VoxelHashMap::Vector3dVectorTuple7 VoxelHashMap::GetCorrespondences(
         }
         return result;
     };
+
 
     const auto &[source, target, normals, non_planar_source, non_planar_target, planar_count, non_planar_count] = tbb::parallel_reduce(
         tbb::blocked_range<size_t>(0, points.size()),
@@ -188,6 +196,7 @@ VoxelHashMap::Vector3dVectorTuple7 VoxelHashMap::GetCorrespondences(
 
     return std::make_tuple(source, target, normals, non_planar_source, non_planar_target, planar_count, non_planar_count);
 }
+
 
 std::vector<Eigen::Vector3d> VoxelHashMap::Pointcloud() const {
     std::vector<Eigen::Vector3d> points;
@@ -228,6 +237,7 @@ void VoxelHashMap::AddPoints(const std::vector<Eigen::Vector3d> &points) {
 }
 
 void VoxelHashMap::RemovePointsFarFromLocation(const Eigen::Vector3d &origin) {
+    const auto max_distance2 = map_cleanup_radius_ * map_cleanup_radius_;
     for (const auto &[voxel, voxel_block] : map_) {
         const auto &pt = voxel_block.points.front();
         const auto max_distance2 = map_cleanup_radius_ * map_cleanup_radius_;
@@ -236,4 +246,7 @@ void VoxelHashMap::RemovePointsFarFromLocation(const Eigen::Vector3d &origin) {
         }
     }
 }
+
+
 }  // namespace genz_icp
+

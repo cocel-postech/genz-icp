@@ -32,11 +32,14 @@
 #include <sophus/se3.hpp>
 #include <vector>
 
+
+
 namespace genz_icp {
 struct VoxelHashMap {
     using Vector3dVector = std::vector<Eigen::Vector3d>;
     using Vector3dVectorTuple = std::tuple<Vector3dVector, Vector3dVector>;
     using Vector3dVectorTuple7 = std::tuple<Vector3dVector, Vector3dVector, Vector3dVector, Vector3dVector, Vector3dVector, size_t, size_t>;
+
     using Voxel = Eigen::Vector3i;
     struct VoxelBlock {
         // buffer of points with a max limit of n_points
@@ -63,6 +66,7 @@ struct VoxelHashMap {
 
     Vector3dVectorTuple7 GetCorrespondences(const Vector3dVector &points,
                                            double max_correspondance_distance) const;
+
     inline void Clear() { map_.clear(); }
     inline bool Empty() const { return map_.empty(); }
     void Update(const std::vector<Eigen::Vector3d> &points, const Eigen::Vector3d &origin);
@@ -70,6 +74,9 @@ struct VoxelHashMap {
     void AddPoints(const std::vector<Eigen::Vector3d> &points);
     void RemovePointsFarFromLocation(const Eigen::Vector3d &origin);
     std::vector<Eigen::Vector3d> Pointcloud() const;
+    std::tuple<Eigen::Vector3d, size_t, Eigen::Matrix3d, double> GetClosestNeighbor(const Eigen::Vector3d &query) const;
+    std::pair<bool, Eigen::Vector3d> DeterminePlanarity(const Eigen::Matrix3d &covariance) const;
+
 
     double voxel_size_;
     double max_distance_;
