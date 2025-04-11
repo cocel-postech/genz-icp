@@ -74,12 +74,13 @@ elseif("$ENV{ROS_VERSION}" STREQUAL "2")
   find_package(rclcpp_components REQUIRED)
   find_package(sensor_msgs REQUIRED)
   find_package(tf2_ros REQUIRED)
+  find_package(yaml-cpp REQUIRED)
 
   # ROS 2 node
   add_library(odometry_component SHARED ros2/OdometryServer.cpp)
   target_compile_features(odometry_component PUBLIC cxx_std_20)
   target_include_directories(odometry_component PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-  target_link_libraries(odometry_component genz_icp::pipeline)
+  target_link_libraries(odometry_component genz_icp::pipeline yaml-cpp)
   ament_target_dependencies(
     odometry_component
     rcutils
