@@ -68,10 +68,12 @@ elseif("$ENV{ROS_VERSION}" STREQUAL "2")
   message(STATUS "GenZ-ICP ROS 2 wrapper will be compiled")
 
   find_package(ament_cmake REQUIRED)
+  find_package(ament_index_cpp REQUIRED)
   find_package(nav_msgs REQUIRED)
   find_package(rcutils REQUIRED)
   find_package(rclcpp REQUIRED)
   find_package(rclcpp_components REQUIRED)
+  find_package(rcpputils REQUIRED)
   find_package(sensor_msgs REQUIRED)
   find_package(tf2_ros REQUIRED)
   find_package(yaml-cpp REQUIRED)
@@ -86,6 +88,7 @@ elseif("$ENV{ROS_VERSION}" STREQUAL "2")
     rcutils
     rclcpp
     rclcpp_components
+    rcpputils
     nav_msgs
     sensor_msgs
     geometry_msgs
@@ -94,7 +97,7 @@ elseif("$ENV{ROS_VERSION}" STREQUAL "2")
   rclcpp_components_register_node(odometry_component PLUGIN "genz_icp_ros::OdometryServer" EXECUTABLE odometry_node)
 
   install(TARGETS odometry_component LIBRARY DESTINATION lib RUNTIME DESTINATION lib/${PROJECT_NAME})
-  install(DIRECTORY launch rviz DESTINATION share/${PROJECT_NAME}/)
+  install(DIRECTORY launch rviz config DESTINATION share/${PROJECT_NAME}/)
 
   ament_package()
 

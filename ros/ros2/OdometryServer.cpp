@@ -46,6 +46,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <std_msgs/msg/string.hpp>
+#include "ament_index_cpp/get_package_share_directory.hpp"
+#include "rcpputils/filesystem_helper.hpp"
 
 namespace genz_icp_ros {
 
@@ -77,7 +79,11 @@ OdometryServer::OdometryServer(const rclcpp::NodeOptions &options)
     // Load the configuration file
     std::string config_file = get_parameter("config_file").as_string();
     if (!config_file.empty()) {
-        YAML::Node yaml = YAML::LoadFile(config_file);
+        rcpputils::fs::path path(config_file);
+        if (!path.is_absolute()) {
+            path = rcpputils::fs::path(ament_index_cpp::get_package_share_directory("genz_icp")) / "config" / path;
+        }
+        YAML::Node yaml = YAML::LoadFile(path.string());
 
         std::vector<rclcpp::Parameter> overrides;
         for (const auto &param : yaml) {
