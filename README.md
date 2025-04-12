@@ -109,7 +109,6 @@ ros2 bag play <rosbag_file_name>.mcap
 Check out the tuning guide for the parameters of GenZ-ICP at this [link][tuning_guide_link]
 
 ## :pushpin: Todo list
-- [ ] Improve ROS2 stability and parameter handling
 - [ ] Code optimization to reduce CPU load
 - [ ] Python support for GenZ-ICP
 
@@ -139,7 +138,7 @@ Like [KISS-ICP](https://github.com/PRBonn/kiss-icp),
 we envision GenZ-ICP as a community-driven project, we love to see how the project is growing thanks to the contributions from the community. We would love to see your face in the list below, just open a Pull Request!
 
 <a href="https://github.com/cocel-postech/genz-icp/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=cocel-postech/genz-icp" />
+  <img src="https://contrib.rocks/image?repo=cocel-postech/genz-icp&nocache=true" />
 </a>
 
 ## :pray: Acknowledgement
