@@ -24,11 +24,8 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.conditions import IfCondition
-from launch.substitutions import (
-    LaunchConfiguration,
-    PathJoinSubstitution,
-    PythonExpression,
-)
+from launch.substitutions import (LaunchConfiguration, PathJoinSubstitution,
+                                  PythonExpression)
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -59,6 +56,7 @@ def generate_launch_description():
             DeclareLaunchArgument("convergence_criterion", default_value="0.0001"),
             DeclareLaunchArgument("initial_threshold", default_value="2.0"),
             DeclareLaunchArgument("min_motion_th", default_value="0.1"),
+            DeclareLaunchArgument("config_file", default_value=""),
             Node(
                 package="genz_icp",
                 executable="odometry_node",
@@ -83,6 +81,7 @@ def generate_launch_description():
                         "min_motion_th": 0.1,
                         "publish_odom_tf": LaunchConfiguration("publish_odom_tf"),
                         "visualize": LaunchConfiguration("visualize"),
+                        "config_file": LaunchConfiguration("config_file"),
                     }
                 ],
             ),

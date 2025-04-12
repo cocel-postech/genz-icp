@@ -25,6 +25,7 @@
 #include <sophus/se3.hpp>
 #include <utility>
 #include <vector>
+#include <yaml-cpp/yaml.h>
 
 // GenZ-ICP-ROS
 #include "OdometryServer.hpp"
@@ -45,6 +46,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <std_msgs/msg/string.hpp>
+#include "ament_index_cpp/get_package_share_directory.hpp"
+#include "rcpputils/filesystem_helper.hpp"
 
 namespace genz_icp_ros {
 
@@ -59,18 +62,64 @@ OdometryServer::OdometryServer(const rclcpp::NodeOptions &options)
     odom_frame_ = declare_parameter<std::string>("odom_frame", odom_frame_);
     publish_odom_tf_ = declare_parameter<bool>("publish_odom_tf", publish_odom_tf_);
     publish_debug_clouds_ = declare_parameter<bool>("visualize", publish_debug_clouds_);
-    config_.max_range = declare_parameter<double>("max_range", config_.max_range);
-    config_.min_range = declare_parameter<double>("min_range", config_.min_range);
-    config_.deskew = declare_parameter<bool>("deskew", config_.deskew);
-    config_.voxel_size = declare_parameter<double>("voxel_size", config_.max_range / 100.0);
-    config_.map_cleanup_radius = declare_parameter<double>("map_cleanup_radius", config_.map_cleanup_radius);
-    config_.planarity_threshold = declare_parameter<double>("planarity_threshold", config_.planarity_threshold);
-    config_.max_points_per_voxel = declare_parameter<int>("max_points_per_voxel", config_.max_points_per_voxel);
-    config_.desired_num_voxelized_points = declare_parameter<int>("desired_num_voxelized_points", config_.desired_num_voxelized_points);
-    config_.max_num_iterations = declare_parameter<int>("max_num_iterations", config_.max_num_iterations);
-    config_.convergence_criterion = declare_parameter<double>("convergence_criterion", config_.convergence_criterion);
-    config_.initial_threshold = declare_parameter<double>("initial_threshold", config_.initial_threshold);
-    config_.min_motion_th = declare_parameter<double>("min_motion_th", config_.min_motion_th);
+    declare_parameter<double>("max_range", config_.max_range);
+    declare_parameter<double>("min_range", config_.min_range);
+    declare_parameter<bool>("deskew", config_.deskew);
+    declare_parameter<double>("voxel_size", config_.max_range / 100.0);
+    declare_parameter<double>("map_cleanup_radius", config_.map_cleanup_radius);
+    declare_parameter<double>("planarity_threshold", config_.planarity_threshold);
+    declare_parameter<int>("max_points_per_voxel", config_.max_points_per_voxel);
+    declare_parameter<int>("desired_num_voxelized_points", config_.desired_num_voxelized_points);
+    declare_parameter<int>("max_num_iterations", config_.max_num_iterations);
+    declare_parameter<double>("convergence_criterion", config_.convergence_criterion);
+    declare_parameter<double>("initial_threshold", config_.initial_threshold);
+    declare_parameter<double>("min_motion_th", config_.min_motion_th);
+    declare_parameter<std::string>("config_file", "");
+
+    // Load the configuration file
+    std::string config_file = get_parameter("config_file").as_string();
+    if (!config_file.empty()) {
+        rcpputils::fs::path path(config_file);
+        if (!path.is_absolute()) {
+            path = rcpputils::fs::path(ament_index_cpp::get_package_share_directory("genz_icp")) / "config" / path;
+        }
+        YAML::Node yaml = YAML::LoadFile(path.string());
+
+        std::vector<rclcpp::Parameter> overrides;
+        for (const auto &param : yaml) {
+            const auto &name = param.first.as<std::string>();
+            const auto &value = param.second;
+            if (value.IsScalar()) {
+                try {
+                    overrides.emplace_back(name, value.as<int>());
+                    continue;
+                } catch (...) {}
+                try {
+                    overrides.emplace_back(name, value.as<double>());
+                    continue;
+                } catch (...) {}
+                try {
+                    overrides.emplace_back(name, value.as<bool>());
+                    continue;
+                } catch (...) {}
+                overrides.emplace_back(name, value.as<std::string>());
+            }
+        }
+        set_parameters(overrides);
+    }
+
+    config_.max_range = get_parameter("max_range").as_double();
+    config_.min_range = get_parameter("min_range").as_double();
+    config_.deskew = get_parameter("deskew").as_bool();
+    config_.voxel_size = get_parameter("voxel_size").as_double();
+    config_.map_cleanup_radius = get_parameter("map_cleanup_radius").as_double();
+    config_.planarity_threshold = get_parameter("planarity_threshold").as_double();
+    config_.max_points_per_voxel = get_parameter("max_points_per_voxel").as_int();
+    config_.desired_num_voxelized_points = get_parameter("desired_num_voxelized_points").as_int();
+    config_.max_num_iterations = get_parameter("max_num_iterations").as_int();
+    config_.convergence_criterion = get_parameter("convergence_criterion").as_double();
+    config_.initial_threshold = get_parameter("initial_threshold").as_double();
+    config_.min_motion_th = get_parameter("min_motion_th").as_double();
     if (config_.max_range < config_.min_range) {
         RCLCPP_WARN(get_logger(), "[WARNING] max_range is smaller than min_range, settng min_range to 0.0");
         config_.min_range = 0.0;

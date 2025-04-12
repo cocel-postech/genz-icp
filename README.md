@@ -88,7 +88,7 @@ mkdir -p ~/colcon_ws/src
 cd ~/colcon_ws/src
 git clone https://github.com/cocel-postech/genz-icp.git
 cd ..
-colcon build --packages-select genz_icp --cmake-args -DCMAKE_BUILD_TYPE=Release
+colcon build --packages-select genz_icp --cmake-args -DCMAKE_BUILD_TYPE=Release --symlink-install
 source ~/colcon_ws/install/setup.bash
 ```
 
