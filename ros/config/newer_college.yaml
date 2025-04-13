@@ -1,14 +1,14 @@
 # Parameter set for Newer College Dataset - 01_short_experiment, 02_long_experiment, 07_parklandmount sequences
-# If this config doesn't work stably in your env., please refer to issue #11 and parameter tuning guide in README.md
+# If this config doesn't work stably in your env., please refer to parameter tuning guide in README.md
 
 # topic: /os1_cloud_node/points (set in launch file or command line)
 deskew: false
 max_range: 120.0
 min_range: 0.5
-voxel_size: 0.5
+voxel_size: 0.6
 desired_num_voxelized_points: 3000
 planarity_threshold: 0.2
-max_points_per_voxel: 1
+max_points_per_voxel: 3
 initial_threshold: 2.0
 min_motion_th: 0.1
 max_num_iterations: 100

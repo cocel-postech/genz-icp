@@ -1,5 +1,5 @@
 # Parameter set for KITTI odometry dataset
-# If this config doesn't work stably in your env., please refer to issue #11 and parameter tuning guide in README.md
+# If this config doesn't work stably in your env., please refer to parameter tuning guide in README.md
 
 # topic: /velodyne_points (set in launch file or command line)
 deskew: false
