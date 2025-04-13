@@ -143,20 +143,30 @@ mkdir -p ~/colcon_ws/src
 cd ~/colcon_ws/src
 git clone https://github.com/cocel-postech/genz-icp.git
 cd ..
-colcon build --packages-select genz_icp --cmake-args -DCMAKE_BUILD_TYPE=Release
+colcon build --packages-select genz_icp --cmake-args -DCMAKE_BUILD_TYPE=Release --symlink-install
 source ~/colcon_ws/install/setup.bash
 ```
 
 #### How to run
 
-The only required argument to provide is the **topic name**:
+#### Option 1
+
+If you want to use a pre-tuned parameter set, you need to provide the **config file** with the **topic name** as arguments:
+
+```sh
+ros2 launch genz_icp odometry.launch.py topic:=<topic_name> config_file:=<config_file_name>.yaml
+```
+```sh
+ros2 bag play <rosbag_file_name>.mcap
+```
+
+#### Option 2
+
+Otherwise, the only required argument to provide is the **topic name**:
 
 ```sh
 ros2 launch genz_icp odometry.launch.py topic:=<topic_name>
 ```
-
-and then,
-
 ```sh
 ros2 bag play <rosbag_file_name>.mcap
 ```
