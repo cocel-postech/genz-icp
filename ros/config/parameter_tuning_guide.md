@@ -16,7 +16,7 @@ This section provides tips for tuning GenZ-ICP's parameters.
 + Similar to **_voxel_size_**, this parameter should also be adjusted proportionally to the **scale** of the environment.
 
 ### `planarity_threshold`
-: Threshold for planarity classification (default: `0.12`)
+: Threshold for planarity classification (default: `0.2`)
 + Lower **_planarity_threshold_** classifies planars pair more strictly.
 + In narrow **indoor** environments, a smaller **_max_points_per_voxel_** is typically used, which reduces the number of neighboring points available for covariance calculation during planarity classification. As a result, even planar surfaces can exhibit relatively high local surface variation.
   To prevent rejecting valid planar pairs due to this, a relatively higher **_planarity_threshold_** is recommended for indoor environments.
