@@ -102,7 +102,7 @@ If you want to use a pre-tuned parameter set, you need to provide the **config f
 ros2 launch genz_icp odometry.launch.py topic:=<topic_name> config_file:=<config_file_name>.yaml
 ```
 ```sh
-ros2 bag play <rosbag_file_name>.mcap
+ros2 bag play <rosbag_file_name>.db3
 ```
 
 Examples and download links for **demo datasets** can be found [here][ros_readme_link]
@@ -117,7 +117,7 @@ Otherwise, the only required argument to provide is the **topic name**:
 ros2 launch genz_icp odometry.launch.py topic:=<topic_name>
 ```
 ```sh
-ros2 bag play <rosbag_file_name>.mcap
+ros2 bag play <rosbag_file_name>.db3
 ```
 
 Check out the tuning guide for the parameters of GenZ-ICP at this [link][tuning_guide_link]
