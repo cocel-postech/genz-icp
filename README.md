@@ -94,14 +94,28 @@ source ~/colcon_ws/install/setup.bash
 
 #### How to run
 
-The only required argument to provide is the **topic name**:
+#### Option 1
+
+If you want to use a pre-tuned parameter set, you need to provide the **config file** with the **topic name** as arguments:
+
+```sh
+ros2 launch genz_icp odometry.launch.py topic:=<topic_name> config_file:=<config_file_name>.yaml
+```
+```sh
+ros2 bag play <rosbag_file_name>.mcap
+```
+
+Examples and download links for **demo datasets** can be found [here][ros_readme_link]
+
+[ros_readme_link]: https://github.com/cocel-postech/genz-icp/blob/master/ros/README.md
+
+#### Option 2
+
+Otherwise, the only required argument to provide is the **topic name**:
 
 ```sh
 ros2 launch genz_icp odometry.launch.py topic:=<topic_name>
 ```
-
-and then,
-
 ```sh
 ros2 bag play <rosbag_file_name>.mcap
 ```
