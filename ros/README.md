@@ -147,6 +147,22 @@ colcon build --packages-select genz_icp --cmake-args -DCMAKE_BUILD_TYPE=Release 
 source ~/colcon_ws/install/setup.bash
 ```
 
+#### How to convert ROS1 bag files to ROS2 bag files (.db3)
+
+To use above demo datasets with ROS2, they must be converted to either `.db3` (SQLite) or `.mcap` format.
+
+1. Install the rosbags conversion tool:
+```sh
+pip3 install rosbags
+```
+
+2. Convert the ROS1 bag file to ROS2 format:
+```sh
+rosbags-convert --src <rosbag_file_name>.bag --dst <rosbag_file_name>
+```
+
+The generated <rosbag_file_name> folder will contain a `.db3` (SQLite) file and a corresponding metadata `.yaml` file.
+
 #### How to run
 
 #### Option 1
@@ -157,7 +173,7 @@ If you want to use a pre-tuned parameter set, you need to provide the **config f
 ros2 launch genz_icp odometry.launch.py topic:=<topic_name> config_file:=<config_file_name>.yaml
 ```
 ```sh
-ros2 bag play <rosbag_file_name>.mcap
+ros2 bag play <rosbag_file_name>.db3
 ```
 
 #### Option 2
@@ -168,7 +184,7 @@ Otherwise, the only required argument to provide is the **topic name**:
 ros2 launch genz_icp odometry.launch.py topic:=<topic_name>
 ```
 ```sh
-ros2 bag play <rosbag_file_name>.mcap
+ros2 bag play <rosbag_file_name>.db3
 ```
 
 Check out the tuning guide for the parameters of GenZ-ICP at this [link][tuning_guide_link]
