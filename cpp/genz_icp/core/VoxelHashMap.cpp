@@ -54,6 +54,8 @@ static const std::array<Eigen::Vector3i, 27> voxel_shifts{
     Eigen::Vector3i(1, -1, 1),  Eigen::Vector3i(1, -1, -1), Eigen::Vector3i(-1, 1, 1),
     Eigen::Vector3i(-1, 1, -1), Eigen::Vector3i(-1, -1, 1), Eigen::Vector3i(-1, -1, -1)
 };
+
+static const size_t min_neighbors_for_normal_estimation = 5; 
 }  // namespace
 
 namespace genz_icp {
@@ -64,7 +66,7 @@ std::tuple<Eigen::Vector3d, size_t, Eigen::Matrix3d, double> VoxelHashMap::GetCl
     Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
     Eigen::Matrix3d covariance = Eigen::Matrix3d::Zero();
 
-    double closest_distance = std::numeric_limits<double>::max();
+    double closest_squared_distance = std::numeric_limits<double>::max();
     size_t n_neighbors = 0;
     
     auto kx = static_cast<int>(query.x() / voxel_size_);
@@ -77,10 +79,10 @@ std::tuple<Eigen::Vector3d, size_t, Eigen::Matrix3d, double> VoxelHashMap::GetCl
         if (search != map_.end()) {
             const auto &points = search->second.points;
             std::for_each(points.cbegin(), points.cend(), [&](const auto &neighbor){
-                double distance = (neighbor - query).norm();
-                if (distance < closest_distance){
+                double squared_distance = (neighbor - query).squaredNorm();
+                if (squared_distance < closest_squared_distance){
                     closest_neighbor = neighbor;
-                    closest_distance = distance;
+                    closest_squared_distance = squared_distance;
                 }
                 centroid += neighbor;
                 covariance += neighbor*neighbor.transpose();
@@ -90,12 +92,12 @@ std::tuple<Eigen::Vector3d, size_t, Eigen::Matrix3d, double> VoxelHashMap::GetCl
         }
     });
 
-    if (n_neighbors>=1){
+    if (n_neighbors >= min_neighbors_for_normal_estimation){
         centroid /= static_cast<double>(n_neighbors);
         covariance /= static_cast<double>(n_neighbors);
-
         covariance -= centroid*centroid.transpose();
     }
+    double closest_distance = (n_neighbors > 0) ? std::sqrt(closest_squared_distance) : std::numeric_limits<double>::max();
     return std::make_tuple(closest_neighbor, n_neighbors, covariance, closest_distance);
 }
 
@@ -167,7 +169,7 @@ VoxelHashMap::Vector3dVectorTuple7 VoxelHashMap::GetCorrespondences(
             const auto &[closest_neighbor, n_neighbors, covariance, closest_distance] = GetClosestNeighbor(point);
             if (closest_distance > max_correspondance_distance) continue;
             
-            const size_t min_neighbors_for_normal_estimation = 5; 
+            // Check if it is planar or non-planar
             if (n_neighbors >= min_neighbors_for_normal_estimation){
                 const auto &[is_planar, normal] = DeterminePlanarity(covariance);
 

@@ -105,9 +105,10 @@ std::tuple<Eigen::Matrix6d, Eigen::Vector6d> BuildLinearSystem(
         return std::make_tuple(J_non_planar, r_non_planar);
     };
 
+    double kernel_squared = kernel * kernel;
     auto compute = [&](const tbb::blocked_range<size_t> &r, ResultTuple J) -> ResultTuple {
-        auto Weight = [&](double residual) {
-            return square(kernel) / square(kernel + residual);
+        auto Weight = [&](double residual_squared) {
+            return kernel_squared / square(kernel + residual_squared);
         };
         auto &[JTJ_private, JTr_private] = J;
         for (size_t i = r.begin(); i < r.end(); ++i) {
