@@ -6,7 +6,7 @@ deskew: false
 max_range: 100.0
 min_range: 0.5
 voxel_size: 0.25
-map_cleanup_radius: 300
+map_cleanup_radius: 300.0
 desired_num_voxelized_points: 2000
 planarity_threshold: 0.2
 max_points_per_voxel: 1
