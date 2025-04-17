@@ -42,8 +42,12 @@ struct VoxelHashMap {
         // buffer of points with a max limit of n_points
         std::vector<Eigen::Vector3d> points;
         int num_points_;
+        VoxelBlock(const Eigen::Vector3d &point, int max_points) : points(), num_points_(max_points) {
+            points.reserve(static_cast<size_t>(num_points_));
+            points.emplace_back(point);
+        }
         inline void AddPoint(const Eigen::Vector3d &point) {
-            if (points.size() < static_cast<size_t>(num_points_)) points.push_back(point);
+            if (points.size() < static_cast<size_t>(num_points_)) points.emplace_back(point);
         }
     };
     struct VoxelHash {

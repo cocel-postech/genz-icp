@@ -238,17 +238,18 @@ void VoxelHashMap::AddPoints(const std::vector<Eigen::Vector3d> &points) {
             auto &voxel_block = search.value();
             voxel_block.AddPoint(point);
         } else {
-            map_.insert({voxel, VoxelBlock{{point}, max_points_per_voxel_}});
+            map_.insert({voxel, VoxelBlock(point, max_points_per_voxel_)});
         }
     });
 }
 
 void VoxelHashMap::RemovePointsFarFromLocation(const Eigen::Vector3d &origin) {
     const auto max_distance2 = map_cleanup_radius_ * map_cleanup_radius_;
-    for (const auto &[voxel, voxel_block] : map_) {
-        const auto &pt = voxel_block.points.front();
-        if ((pt - origin).squaredNorm() > (max_distance2)) {
-            map_.erase(voxel);
+    for (auto it = map_.begin(); it != map_.end();) {
+        if ((it->second.points.front() - origin).squaredNorm() > (max_distance2)) {
+            it = map_.erase(it);
+        } else {
+            ++it;
         }
     }
 }
