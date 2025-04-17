@@ -238,7 +238,7 @@ void VoxelHashMap::AddPoints(const std::vector<Eigen::Vector3d> &points) {
             auto &voxel_block = search.value();
             voxel_block.AddPoint(point);
         } else {
-            map_.insert({voxel, VoxelBlock{{point}, max_points_per_voxel_}});
+            map_.insert({voxel, VoxelBlock(point, max_points_per_voxel_)});
         }
     });
 }
