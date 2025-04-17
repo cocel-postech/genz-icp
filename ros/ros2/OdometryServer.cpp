@@ -89,20 +89,35 @@ OdometryServer::OdometryServer(const rclcpp::NodeOptions &options)
         for (const auto &param : yaml) {
             const auto &name = param.first.as<std::string>();
             const auto &value = param.second;
+
             if (value.IsScalar()) {
+                // Get the declared type of the parameter
+                rcl_interfaces::msg::ParameterDescriptor descriptor;
                 try {
-                    overrides.emplace_back(name, value.as<int>());
+                    descriptor = this->describe_parameter(name);
+                } catch (const rclcpp::exceptions::ParameterNotDeclaredException &e) {
+                    // If the parameter wasn't declared, warn and skip
+                    RCLCPP_WARN(this->get_logger(), "Parameter '%s' not declared. Skipping it.", name.c_str());
                     continue;
-                } catch (...) {}
-                try {
-                    overrides.emplace_back(name, value.as<double>());
-                    continue;
-                } catch (...) {}
-                try {
-                    overrides.emplace_back(name, value.as<bool>());
-                    continue;
-                } catch (...) {}
-                overrides.emplace_back(name, value.as<std::string>());
+                }
+    
+                using ParamType = rcl_interfaces::msg::ParameterType;
+                switch (descriptor.type) {
+                    case ParamType::PARAMETER_DOUBLE:
+                        overrides.emplace_back(name, value.as<double>());
+                        break;
+                    case ParamType::PARAMETER_INTEGER:
+                        overrides.emplace_back(name, value.as<int>());
+                        break;
+                    case ParamType::PARAMETER_BOOL:
+                        overrides.emplace_back(name, value.as<bool>());
+                        break;
+                    case ParamType::PARAMETER_STRING:
+                        overrides.emplace_back(name, value.as<std::string>());
+                        break;
+                    default:
+                        break;
+                }
             }
         }
         set_parameters(overrides);
