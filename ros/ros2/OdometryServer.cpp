@@ -93,14 +93,8 @@ OdometryServer::OdometryServer(const rclcpp::NodeOptions &options)
             if (value.IsScalar()) {
                 // Get the declared type of the parameter
                 rcl_interfaces::msg::ParameterDescriptor descriptor;
-                try {
-                    descriptor = this->describe_parameter(name);
-                } catch (const rclcpp::exceptions::ParameterNotDeclaredException &e) {
-                    // If the parameter wasn't declared, warn and skip
-                    RCLCPP_WARN(this->get_logger(), "Parameter '%s' not declared. Skipping it.", name.c_str());
-                    continue;
-                }
-    
+                descriptor = this->describe_parameter(name);
+
                 using ParamType = rcl_interfaces::msg::ParameterType;
                 switch (descriptor.type) {
                     case ParamType::PARAMETER_DOUBLE:
