@@ -89,20 +89,29 @@ OdometryServer::OdometryServer(const rclcpp::NodeOptions &options)
         for (const auto &param : yaml) {
             const auto &name = param.first.as<std::string>();
             const auto &value = param.second;
+
             if (value.IsScalar()) {
-                try {
-                    overrides.emplace_back(name, value.as<int>());
-                    continue;
-                } catch (...) {}
-                try {
-                    overrides.emplace_back(name, value.as<double>());
-                    continue;
-                } catch (...) {}
-                try {
-                    overrides.emplace_back(name, value.as<bool>());
-                    continue;
-                } catch (...) {}
-                overrides.emplace_back(name, value.as<std::string>());
+                // Get the declared type of the parameter
+                rcl_interfaces::msg::ParameterDescriptor descriptor;
+                descriptor = this->describe_parameter(name);
+
+                using ParamType = rcl_interfaces::msg::ParameterType;
+                switch (descriptor.type) {
+                    case ParamType::PARAMETER_DOUBLE:
+                        overrides.emplace_back(name, value.as<double>());
+                        break;
+                    case ParamType::PARAMETER_INTEGER:
+                        overrides.emplace_back(name, value.as<int>());
+                        break;
+                    case ParamType::PARAMETER_BOOL:
+                        overrides.emplace_back(name, value.as<bool>());
+                        break;
+                    case ParamType::PARAMETER_STRING:
+                        overrides.emplace_back(name, value.as<std::string>());
+                        break;
+                    default:
+                        break;
+                }
             }
         }
         set_parameters(overrides);
