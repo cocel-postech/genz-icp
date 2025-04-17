@@ -178,13 +178,13 @@ VoxelHashMap::Vector3dVectorTuple7 VoxelHashMap::GetCorrespondences(
                     result.target.emplace_back(closest_neighbor);
                     result.normals.emplace_back(normal);
                     result.planar_count++;
-                } else if (closest_distance < max_correspondance_distance){
+                } else {
                     result.non_planar_source.emplace_back(point);
                     result.non_planar_target.emplace_back(closest_neighbor);
                     result.non_planar_count++;
                 }
             } 
-            else if (closest_distance < max_correspondance_distance){
+            else {
                     result.non_planar_source.emplace_back(point);
                     result.non_planar_target.emplace_back(closest_neighbor);
                     result.non_planar_count++;
