@@ -61,6 +61,7 @@ OdometryServer::OdometryServer(const rclcpp::NodeOptions &options)
     base_frame_ = declare_parameter<std::string>("base_frame", base_frame_);
     odom_frame_ = declare_parameter<std::string>("odom_frame", odom_frame_);
     publish_odom_tf_ = declare_parameter<bool>("publish_odom_tf", publish_odom_tf_);
+    invert_odom_tf_ = declare_parameter<bool>("invert_odom_tf", invert_odom_tf_);
     publish_debug_clouds_ = declare_parameter<bool>("visualize", publish_debug_clouds_);
     declare_parameter<double>("max_range", config_.max_range);
     declare_parameter<double>("min_range", config_.min_range);
@@ -217,9 +218,15 @@ void OdometryServer::PublishOdometry(const Sophus::SE3d &pose,
     if (publish_odom_tf_) {
         geometry_msgs::msg::TransformStamped transform_msg;
         transform_msg.header.stamp = stamp;
-        transform_msg.header.frame_id = odom_frame_;
-        transform_msg.child_frame_id = base_frame_.empty() ? cloud_frame_id : base_frame_;
-        transform_msg.transform = tf2::sophusToTransform(pose);
+        if (invert_odom_tf_) {
+            transform_msg.header.frame_id = base_frame_.empty() ? cloud_frame_id : base_frame_;
+            transform_msg.child_frame_id = odom_frame_;
+            transform_msg.transform = tf2::sophusToTransform(pose.inverse());
+        } else {
+            transform_msg.header.frame_id = odom_frame_;
+            transform_msg.child_frame_id = base_frame_.empty() ? cloud_frame_id : base_frame_;
+            transform_msg.transform = tf2::sophusToTransform(pose);
+        }
         tf_broadcaster_->sendTransform(transform_msg);
     }
 
