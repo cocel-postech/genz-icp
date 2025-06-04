@@ -41,6 +41,7 @@ def generate_launch_description():
             DeclareLaunchArgument("odom_frame", default_value="odom"),
             DeclareLaunchArgument("base_frame", default_value=""),
             DeclareLaunchArgument("publish_odom_tf", default_value="true"),
+            DeclareLaunchArgument("invert_odom_tf", default_value="false"),
             # GenZ-ICP parameters
             DeclareLaunchArgument("deskew", default_value="false"),
             DeclareLaunchArgument("max_range", default_value="100.0"),
@@ -80,6 +81,7 @@ def generate_launch_description():
                         "initial_threshold": 2.0,
                         "min_motion_th": 0.1,
                         "publish_odom_tf": LaunchConfiguration("publish_odom_tf"),
+                        "invert_odom_tf": LaunchConfiguration("invert_odom_tf"),
                         "visualize": LaunchConfiguration("visualize"),
                         "config_file": LaunchConfiguration("config_file"),
                     }
