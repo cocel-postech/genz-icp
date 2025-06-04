@@ -69,6 +69,7 @@ private:
     std::unique_ptr<tf2_ros::Buffer> tf2_buffer_;
     std::unique_ptr<tf2_ros::TransformListener> tf2_listener_;
     bool publish_odom_tf_;
+    bool invert_odom_tf_;
     bool publish_debug_clouds_;
 
     /// Data subscribers.
