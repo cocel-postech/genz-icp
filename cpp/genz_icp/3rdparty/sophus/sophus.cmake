@@ -28,4 +28,7 @@ set(BUILD_SOPHUS_EXAMPLES OFF CACHE BOOL "Don't build Sophus Examples")
 
 # TODO: after https://github.com/strasdat/Sophus/pull/502 gets merged go back to mainstream
 FetchContent_Declare(sophus SYSTEM URL https://github.com/nachovizzo/Sophus/archive/refs/tags/1.22.11.tar.gz)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.31)
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif()
 FetchContent_MakeAvailable(sophus)

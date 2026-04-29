@@ -22,4 +22,7 @@
 # SOFTWARE.
 include(FetchContent)
 FetchContent_Declare(tessil SYSTEM URL https://github.com/Tessil/robin-map/archive/refs/tags/v1.2.1.tar.gz)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.31)
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif()
 FetchContent_MakeAvailable(tessil)
