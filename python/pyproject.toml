@@ -74,7 +74,7 @@ Homepage = "https://github.com/cocel-postech/genz-icp"
 [tool.scikit-build]
 build-dir = "build/{wheel_tag}"
 build.verbose = false
-cmake.version = ">=3.16"
+cmake.version = ">=3.16,<4"
 editable.mode = "redirect"
 editable.rebuild = true
 editable.verbose = true
