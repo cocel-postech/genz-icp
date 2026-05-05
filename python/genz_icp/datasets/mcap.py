@@ -1,0 +1,136 @@
+# MIT License
+#
+# Copyright (c) 2023 Ignacio Vizzo, Tiziano Guadagnino, Benedikt Mersch, Cyrill Stachniss.
+# Modified by Daehan Lee, Hyungtae Lim, and Soohee Han, 2024
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+import os
+import sys
+
+import numpy as np
+
+
+class McapDataloader:
+    def __init__(self, data_dir: str, topic: str, *_, **__):
+        """Standalone .mcap dataloader withouth any ROS distribution."""
+        # Conditional imports to avoid injecting dependencies for non mcap users
+        try:
+            from mcap.reader import make_reader
+            from mcap_ros2.reader import read_ros2_messages
+        except ImportError as e:
+            print("mcap plugins not installed: 'pip install mcap-ros2-support'")
+            exit(1)
+
+        from genz_icp.tools.point_cloud2 import read_point_cloud
+
+        # we expect `data_dir` param to be a path to the .mcap file, so rename for clarity
+        assert os.path.isfile(data_dir), "mcap dataloader expects an existing MCAP file"
+        self.sequence_id = os.path.basename(data_dir).split(".")[0]
+        self.mcap_file = str(data_dir)
+
+        self.make_reader = make_reader
+        self.read_ros2_messages = read_ros2_messages
+        self.read_point_cloud = read_point_cloud
+
+        self.bag = self.make_reader(open(self.mcap_file, "rb"))
+        self.summary = self.bag.get_summary()
+        self.topic = self.check_topic(topic)
+        self.n_scans = self._get_n_scans()
+        self.msgs = self.read_ros2_messages(self.mcap_file, topics=[self.topic])
+        self.timestamps = []
+        self.use_global_visualizer = True
+
+    def __del__(self):
+        if hasattr(self, "bag"):
+            del self.bag
+
+    def __getitem__(self, idx):
+        msg = next(self.msgs).ros_msg
+        self.timestamps.append(self.stamp_to_sec(msg.header.stamp))
+        return self.read_point_cloud(msg)
+
+    def __len__(self):
+        return self.n_scans
+
+    def _get_n_scans(self) -> int:
+        return sum(
+            count
+            for (id, count) in self.summary.statistics.channel_message_counts.items()
+            if self.summary.channels[id].topic == self.topic
+        )
+
+    def reset(self):
+        self.timestamps = []
+        self.bag = self.make_reader(open(self.mcap_file, "rb"))
+        self.msgs = self.read_ros2_messages(self.mcap_file, topics=[self.topic])
+
+    @staticmethod
+    def stamp_to_sec(stamp):
+        return stamp.sec + float(stamp.nanosec) / 1e9
+
+    def get_frames_timestamps(self) -> list:
+        return self.timestamps
+
+    def check_topic(self, topic: str) -> str:
+        # Extract schema id from the .mcap file that encodes the PointCloud2 msg
+        schema_id = [
+            schema.id
+            for schema in self.summary.schemas.values()
+            if schema.name == "sensor_msgs/msg/PointCloud2"
+        ][0]
+
+        point_cloud_topics = [
+            channel.topic
+            for channel in self.summary.channels.values()
+            if channel.schema_id == schema_id
+        ]
+
+        def normalize_topic_name(name: str) -> str:
+            return name.lstrip("/")
+
+        def print_available_topics_and_exit():
+            print(50 * "-")
+            for t in point_cloud_topics:
+                print(f"--topic {t}")
+            print(50 * "-")
+            sys.exit(1)
+
+        if topic:
+            normalized_requested = normalize_topic_name(topic)
+            for available_topic in point_cloud_topics:
+                if normalize_topic_name(available_topic) == normalized_requested:
+                    return available_topic
+        # when user specified the topic check that exists
+        if topic:
+            print(
+                f'[ERROR] Dataset does not contain any msg with the topic name "{topic}". '
+                "Please select one of the following topics with the --topic flag"
+            )
+            print_available_topics_and_exit()
+        if len(point_cloud_topics) > 1:
+            print(
+                "Multiple sensor_msgs/msg/PointCloud2 topics available."
+                "Please select one of the following topics with the --topic flag"
+            )
+            print_available_topics_and_exit()
+
+        if len(point_cloud_topics) == 0:
+            print("[ERROR] Your dataset does not contain any sensor_msgs/msg/PointCloud2 topic")
+        if len(point_cloud_topics) == 1:
+            return point_cloud_topics[0]
