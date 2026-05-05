@@ -84,6 +84,36 @@ You can still pass your own local YAML path:
 genz_icp_pipeline --config /path/to/my_config.yaml --visualize /path/to/data --topic /pointcloud_topic
 ```
 
+<details>
+<summary><strong>⚠️ Python version compatibility for built-in pre-tuned configs (important for Python < 3.9)</strong></summary>
+
+Above built-in pre-tuned configs can be used by filename (without specifying a full path) only when using **Python >= 3.9**.
+
+This is because the package relies on `importlib.resources.files`, which is available starting from Python 3.9.
+<br>
+
+* **Python >= 3.9 (recommended)**
+  You can directly use config names:
+
+  ```sh
+  genz_icp_pipeline --config kitti.yaml --visualize /path/to/data --topic /velodyne_points
+  ```
+
+* **Python < 3.9**
+  Built-in configs cannot be resolved by name.
+  Instead, clone the repository and provide the path manually:
+
+  ```sh
+  git clone https://github.com/cocel-postech/genz-icp.git
+
+  genz_icp_pipeline \
+    --config /path/to/genz-icp/python/genz_icp/config/pretuned/kitti.yaml \
+    --visualize /path/to/data \
+    --topic /velodyne_points
+  ```
+
+</details>
+
 ### Install Python API (developer mode)
 
 If you plan to modify the code, the main requirements are a modern C++ compiler and `pip`.
