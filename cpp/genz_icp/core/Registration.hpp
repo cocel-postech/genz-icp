@@ -33,6 +33,7 @@ namespace genz_icp {
     
 struct Registration {
     explicit Registration(int max_num_iteration, double convergence_criterion);
+    void SetTerminalStatusEnabled(bool enabled) { terminal_status_enabled_ = enabled; }
 
     std::tuple<Sophus::SE3d, std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector3d>> RegisterFrame(const std::vector<Eigen::Vector3d> &frame,
                                                                                                        const VoxelHashMap &voxel_map,
@@ -42,5 +43,6 @@ struct Registration {
 
     int max_num_iterations_;
     double convergence_criterion_;
+    bool terminal_status_enabled_ = true;
 };
 }  // namespace genz_icp

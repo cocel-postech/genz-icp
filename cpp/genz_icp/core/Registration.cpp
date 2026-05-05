@@ -208,7 +208,9 @@ std::tuple<Sophus::SE3d, std::vector<Eigen::Vector3d>, std::vector<Eigen::Vector
         T_icp = estimation * T_icp;
         // Termination criteria
         if (dx.norm() < convergence_criterion_ || j == max_num_iterations_ - 1) {
-            VisualizeStatus(planar_count, non_planar_count, alpha);
+            if (terminal_status_enabled_) {
+                VisualizeStatus(planar_count, non_planar_count, alpha);
+            }
             final_planar_points = src_planar;
             final_non_planar_points = src_non_planar;
             break;

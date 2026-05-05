@@ -75,6 +75,7 @@ public:
     Vector3dVectorTuple RegisterFrame(const std::vector<Eigen::Vector3d> &frame);
     Vector3dVectorTuple RegisterFrame(const std::vector<Eigen::Vector3d> &frame,
                                       const std::vector<double> &timestamps);
+    void SetTerminalStatusEnabled(bool enabled) { registration_.SetTerminalStatusEnabled(enabled); }
     Vector3dVectorTuple Voxelize(const std::vector<Eigen::Vector3d> &frame, double voxel_size) const;
     double GetAdaptiveThreshold();
     Sophus::SE3d GetPredictionModel() const;
