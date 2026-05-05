@@ -78,6 +78,14 @@ cmake.version = ">=3.16,<4"
 editable.mode = "redirect"
 editable.rebuild = true
 editable.verbose = true
+sdist.exclude = [
+    ".venv*",
+    "build",
+    "dist",
+    "wheelhouse",
+    "__pycache__",
+    "*.egg-info",
+]
 wheel.install-dir = "genz_icp/pybind/"
 
 [tool.black]
