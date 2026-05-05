@@ -14,7 +14,7 @@
   <arg name="max_range" default="100.0"/>
   <arg name="min_range" default="0.3"/>
   <arg name="voxel_size" default="0.3"/>
-  <arg name="map_cleanup_radius" default=""/>
+  <arg name="map_cleanup_radius" default="100.0"/>
   <arg name="desired_num_voxelized_points" default="2000"/>
   <arg name="planarity_threshold" default="0.2"/>
   <arg name="max_points_per_voxel" default="1"/>
