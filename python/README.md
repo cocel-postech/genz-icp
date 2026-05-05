@@ -3,8 +3,6 @@
     <a href="https://github.com/cocel-postech/genz-icp/releases"><img src="https://img.shields.io/github/v/release/cocel-postech/genz-icp?label=version" /></a>
     <a href="https://github.com/cocel-postech/genz-icp/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
     <a href="https://github.com/cocel-postech/genz-icp"><img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" /></a>
-    <a href="https://github.com/cocel-postech/genz-icp"><img src="https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white" /></a>
-    <a href="https://github.com/cocel-postech/genz-icp"><img src="https://img.shields.io/badge/mac%20os-000000?logo=apple&logoColor=white" /></a>
     <br />
     <br />
     <a href="https://www.youtube.com/watch?v=EyTJbdC_AA4">Demo</a>
@@ -30,7 +28,7 @@
 pip install genz-icp
 ```
 
-If you also want to install all the *(optional)* dependencies, like Open3D/Polyscope for visualization:
+If you also want to install all the dependencies, like Open3D/Polyscope for visualization *(recommended)*:
 
 ```sh
 pip install "genz-icp[all]"
