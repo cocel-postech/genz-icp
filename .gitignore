@@ -132,6 +132,10 @@ local.properties
 
 # Pybinding
 python/build/
+python/dist/
 *.pyc
+.polyscope.ini
+imgui.ini
+results/
 
 # End of https://www.gitignore.io/api/c++,code,cmake,eclipse
