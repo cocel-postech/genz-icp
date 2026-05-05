@@ -125,7 +125,7 @@ If you use our codes, please cite our paper ([arXiv][arXivLink], [IEEE *Xplore*]
   doi={10.1109/LRA.2024.3498779}
 }
 ```
-
+[arXivLink]: https://arxiv.org/abs/2411.06766
 [genzicpIEEElink]: https://ieeexplore.ieee.org/document/10753079
 
 ## :sparkles: Contributors
