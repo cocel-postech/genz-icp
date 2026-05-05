@@ -78,7 +78,6 @@ cmake.version = ">=3.16"
 editable.mode = "redirect"
 editable.rebuild = true
 editable.verbose = true
-sdist.exclude = ["pybind/"]
 wheel.install-dir = "genz_icp/pybind/"
 
 [tool.black]
