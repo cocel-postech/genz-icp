@@ -1,0 +1,102 @@
+[build-system]
+requires = ["packaging>=24", "scikit_build_core>=0.10", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "genz-icp"
+version = "0.3.0"
+description = "Generalizable and degeneracy-robust LiDAR odometry"
+readme = "README.md"
+authors = [
+    { name = "Daehan Lee", email = "daehanlee@postech.ac.kr" },
+    { name = "Hyungtae Lim", email = "shapelim@mit.edu" },
+]
+requires-python = ">=3.8"
+keywords = [
+    "LiDAR",
+    "Localization",
+    "Odometry",
+    "SLAM",
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Other Audience",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: Unix",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "natsort",
+    "numpy",
+    "pydantic>=2",
+    "pydantic-settings",
+    "pyquaternion",
+    "rich",
+    "tqdm",
+    "typer[all]>=0.6.0",
+]
+
+[project.optional-dependencies]
+all = [
+    "open3d>=0.16",
+    "polyscope>=2.4.0",
+    "ouster-sdk>=0.11",
+    "pyntcloud",
+    "PyYAML",
+    "trimesh",
+    "rosbags>=0.10,<0.12",
+]
+test = [
+    "pytest",
+]
+visualizer = [
+    "open3d>=0.13",
+]
+
+[project.scripts]
+genz_icp_pipeline = "genz_icp.tools.cmd:run"
+genz_icp_dump_config = "genz_icp.config.parser:write_config"
+
+[project.urls]
+Homepage = "https://github.com/cocel-postech/genz-icp"
+
+[tool.scikit-build]
+build-dir = "build/{wheel_tag}"
+build.verbose = false
+cmake.version = ">=3.16"
+editable.mode = "redirect"
+editable.rebuild = true
+editable.verbose = true
+sdist.exclude = ["pybind/"]
+wheel.install-dir = "genz_icp/pybind/"
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+
+[tool.pylint.format]
+max-line-length = "100"
+
+[tool.cibuildwheel]
+archs = ["auto64"]
+skip = ["*-musllinux*",  "pp*", "cp36-*"]
+
+[tool.cibuildwheel.macos]
+environment = "MACOSX_DEPLOYMENT_TARGET=11.0"
+archs = ["auto64", "arm64"]
+
+[tool.pytest.ini_options]
+testpaths = ['tests']

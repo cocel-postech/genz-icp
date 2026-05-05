@@ -1,0 +1,7 @@
+recursive-include genz_icp *.py
+recursive-include genz_icp *.cpp
+recursive-include genz_icp *.h
+recursive-include genz_icp *.yaml
+global-include CMakeLists.txt
+global-include LICENSE
+global-include *.cmake
