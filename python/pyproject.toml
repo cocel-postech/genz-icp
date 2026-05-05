@@ -55,7 +55,8 @@ all = [
     "pyntcloud",
     "PyYAML",
     "trimesh",
-    "rosbags>=0.10,<0.12",
+    "rosbags>=0.9,<0.10; python_version < '3.9'",
+    "rosbags>=0.10,<0.12; python_version >= '3.9'",
 ]
 test = [
     "pytest",
