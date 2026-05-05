@@ -1,6 +1,7 @@
 <div align="center">
     <h1>GenZ-ICP</h1>
     <a href="https://github.com/cocel-postech/genz-icp/tree/master/cpp/genz_icp"><img src="https://img.shields.io/badge/-C++-blue?logo=cplusplus" /></a>
+    <a href="https://github.com/cocel-postech/genz-icp/tree/master/python/genz_icp"><img src="https://img.shields.io/badge/Python-3670A0?logo=python&logoColor=ffdd54" /></a>
     <a href="https://github.com/cocel-postech/genz-icp/tree/master/ros"><img src="https://img.shields.io/badge/ROS1-Noetic-blue" /></a>
     <a href="https://github.com/cocel-postech/genz-icp/tree/master/ros"><img src="https://img.shields.io/badge/ROS2-Humble-blue" /></a>
     <a href=""><img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" /></a>
@@ -75,6 +76,7 @@ rosbag play <rosbag_file_name>.bag
 ```
 
 Examples and download links for demo datasets are available in [ros/README.md](https://github.com/cocel-postech/genz-icp/blob/master/ros/README.md).
+
 Parameter tuning guide: [ros/config/parameter_tuning_guide.md](https://github.com/cocel-postech/genz-icp/blob/master/ros/config/parameter_tuning_guide.md)
 
 </details>
@@ -108,6 +110,7 @@ ros2 bag play <rosbag_file_name>.db3
 ```
 
 Examples and download links for demo datasets are available in [ros/README.md](https://github.com/cocel-postech/genz-icp/blob/master/ros/README.md).
+
 Parameter tuning guide: [ros/config/parameter_tuning_guide.md](https://github.com/cocel-postech/genz-icp/blob/master/ros/config/parameter_tuning_guide.md)
 
 </details>
