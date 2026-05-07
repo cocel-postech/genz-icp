@@ -92,7 +92,8 @@ elseif("$ENV{ROS_VERSION}" STREQUAL "2")
     nav_msgs
     sensor_msgs
     geometry_msgs
-    tf2_ros)
+    tf2_ros
+    ament_index_cpp)
 
   rclcpp_components_register_node(odometry_component PLUGIN "genz_icp_ros::OdometryServer" EXECUTABLE odometry_node)
 
