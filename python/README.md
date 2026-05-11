@@ -16,7 +16,7 @@
     <a href="https://github.com/cocel-postech/genz-icp/issues">Contact Us</a>
   <br />
   <br />
-  <p align="center"><img src=../pictures/GenZ-ICP_visualizer.gif alt="animated" width="500" /></p>
+  <p align="center"><img src=../pictures/GenZ-ICP_visualizer.gif alt="animated" width="1100" /></p>
 
 [GenZ-ICP](https://arxiv.org/abs/2411.06766) is a **Generalizable and Degeneracy-Robust LiDAR Odometry Using an Adaptive Weighting**
 </div>
