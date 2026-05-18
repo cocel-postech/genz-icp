@@ -131,6 +131,14 @@ If you use our codes, please cite our paper ([arXiv][arXivLink], [IEEE *Xplore*]
   doi={10.1109/LRA.2024.3498779}
 }
 ```
+```
+@article{lee2026genzlio,
+  title={{GenZ-LIO: Generalizable LiDAR-Inertial Odometry Beyond Indoor--Outdoor Boundaries}},
+  author={Lee, Daehan and Lim, Hyungtae and Kim, Seongjun and Rho, Soonbin and Lee, Changhyeon and Park, Sanghyun and Hong, Junwoo and Choi, Eunseon and Jo, Hyunyoung and Han, Soohee},
+  journal={arXiv preprint arXiv:2603.16273},
+  year={2026}
+}
+```
 
 [genzicpIEEElink]: https://ieeexplore.ieee.org/document/10753079
 
