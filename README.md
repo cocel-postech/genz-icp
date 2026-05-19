@@ -24,6 +24,12 @@
   <br />
   <p align="center"><img src=pictures/GenZ-ICP.gif alt="animated" width="500" /></p>
 
+  <p align="center">
+    <strong>(May 19, 2026)</strong> pip installation is now live:
+    <br/>
+    <a href="https://pypi.org/project/genz-icp/"><img src="https://readme-typing-svg.demolab.com?background=0D1117&color=22C55E&font=Fira+Code&size=18&duration=2500&pause=800&center=true&vCenter=true&width=320&height=30&lines=%24+pip+install+genz-icp" alt="pip install genz-icp"/></a>
+</p>
+
   [GenZ-ICP][arXivlink] is a **Generalizable and Degeneracy-Robust LiDAR Odometry Using an Adaptive Weighting**
 </div>
 
