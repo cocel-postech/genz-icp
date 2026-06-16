@@ -80,12 +80,12 @@ elseif("$ENV{ROS_VERSION}" STREQUAL "2")
   find_package(yaml-cpp REQUIRED)
 
   # ROS 2 node
-  add_library(odometry_component SHARED ros2/OdometryServer.cpp)
-  target_compile_features(odometry_component PUBLIC cxx_std_20)
-  target_include_directories(odometry_component PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-  target_link_libraries(odometry_component genz_icp::pipeline yaml-cpp)
+  add_library(genz_icp_odometry_component SHARED ros2/OdometryServer.cpp)
+  target_compile_features(genz_icp_odometry_component PUBLIC cxx_std_20)
+  target_include_directories(genz_icp_odometry_component PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_link_libraries(genz_icp_odometry_component genz_icp::pipeline yaml-cpp)
   ament_target_dependencies(
-    odometry_component
+    genz_icp_odometry_component
     rcutils
     rclcpp
     rclcpp_components
@@ -96,9 +96,9 @@ elseif("$ENV{ROS_VERSION}" STREQUAL "2")
     tf2_ros
     ament_index_cpp)
 
-  rclcpp_components_register_node(odometry_component PLUGIN "genz_icp_ros::OdometryServer" EXECUTABLE odometry_node)
+  rclcpp_components_register_node(genz_icp_odometry_component PLUGIN "genz_icp_ros::OdometryServer" EXECUTABLE odometry_node)
 
-  install(TARGETS odometry_component LIBRARY DESTINATION lib RUNTIME DESTINATION lib/${PROJECT_NAME})
+  install(TARGETS genz_icp_odometry_component LIBRARY DESTINATION lib RUNTIME DESTINATION lib/${PROJECT_NAME})
   install(DIRECTORY launch rviz config DESTINATION share/${PROJECT_NAME}/)
 
   ament_package()
