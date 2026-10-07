@@ -137,7 +137,7 @@ If you use our codes, please cite our paper ([arXiv][arXivLink], [IEEE *Xplore*]
   doi={10.1109/LRA.2024.3498779}
 }
 ```
-For the LiDAR-inertial odometry (LIO) extension of GenZ-ICP, please also refer to [GenZ-LIO][genzlioarxivlink].
+For the LiDAR-inertial odometry (LIO) extension of GenZ-ICP, please also refer to [GenZ-LIO](https://github.com/cocel-postech/genz-lio).
 ```
 @article{lee2026genzlio,
   title={{GenZ-LIO: Generalizable LiDAR-Inertial Odometry Beyond Confined--Open Boundaries}},
