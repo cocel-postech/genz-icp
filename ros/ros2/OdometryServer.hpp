@@ -34,6 +34,7 @@
 #include <nav_msgs/msg/path.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
+#include <optional>
 #include <string>
 
 namespace genz_icp_ros {
@@ -55,13 +56,14 @@ private:
 
     /// Stream the debugging point clouds for visualization (if required)
     void PublishClouds(const rclcpp::Time &stamp,
-                       const std::string &cloud_frame_id,
+                       const Sophus::SE3d &map_to_odom,
                        const std::vector<Eigen::Vector3d> &planar_points,
                        const std::vector<Eigen::Vector3d> &non_planar_points);
 
     /// Utility function to compute transformation using tf tree
-    Sophus::SE3d LookupTransform(const std::string &target_frame,
-                                 const std::string &source_frame) const;
+    std::optional<Sophus::SE3d> LookupTransform(const std::string &target_frame,
+                                              const std::string &source_frame,
+                                              const rclcpp::Time &stamp) const;
 
 private:
     /// Tools for broadcasting TFs.
@@ -87,6 +89,9 @@ private:
     /// GenZ-ICP
     genz_icp::pipeline::GenZICP odometry_;
     genz_icp::pipeline::GenZConfig config_;
+
+    // Fixed transform from the initial LiDAR frame to the initial output frame.
+    std::optional<Sophus::SE3d> map_to_odom_;
 
     /// Global/map coordinate frame.
     std::string odom_frame_{"odom"};

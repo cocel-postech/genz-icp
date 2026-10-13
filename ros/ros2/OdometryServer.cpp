@@ -163,50 +163,49 @@ OdometryServer::OdometryServer(const rclcpp::NodeOptions &options)
     RCLCPP_INFO(this->get_logger(), "GenZ-ICP ROS 2 odometry node initialized");
 }
 
-Sophus::SE3d OdometryServer::LookupTransform(const std::string &target_frame,
-                                             const std::string &source_frame) const {
-    std::string err_msg;
-    if (tf2_buffer_->_frameExists(source_frame) &&  //
-        tf2_buffer_->_frameExists(target_frame) &&  //
-        tf2_buffer_->canTransform(target_frame, source_frame, tf2::TimePointZero, &err_msg)) {
-        try {
-            auto tf = tf2_buffer_->lookupTransform(target_frame, source_frame, tf2::TimePointZero);
-            return tf2::transformToSophus(tf);
-        } catch (tf2::TransformException &ex) {
-            RCLCPP_WARN(this->get_logger(), "%s", ex.what());
-        }
+std::optional<Sophus::SE3d> OdometryServer::LookupTransform(
+    const std::string &target_frame, const std::string &source_frame, const rclcpp::Time &stamp) const {
+    try {
+        return tf2::transformToSophus(tf2_buffer_->lookupTransform(target_frame, source_frame, stamp));
+    } catch (const tf2::TransformException &ex) {
+        RCLCPP_WARN(this->get_logger(), "Skipping cloud: failed to find tf from %s to %s: %s",
+                    source_frame.c_str(), target_frame.c_str(), ex.what());
+        return std::nullopt;
     }
-    RCLCPP_WARN(this->get_logger(), "Failed to find tf. Reason=%s", err_msg.c_str());
-    return {};
 }
 
 void OdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg) {
     const auto cloud_frame_id = msg->header.frame_id;
+    // Resolve the extrinsic at the scan time before updating the ICP state. A
+    // missing transform must not turn a LiDAR pose into a mislabeled base pose.
+    Sophus::SE3d cloud_to_base;
+    if (!base_frame_.empty() && base_frame_ != cloud_frame_id) {
+        const auto transform = LookupTransform(base_frame_, cloud_frame_id, msg->header.stamp);
+        if (!transform) return;
+        cloud_to_base = *transform;
+    }
+
     const auto points = PointCloud2ToEigen(msg);
     const auto timestamps = [&]() -> std::vector<double> {
         if (!config_.deskew) return {};
         return GetTimestamps(msg);
     }();
-    const auto egocentric_estimation = (base_frame_.empty() || base_frame_ == cloud_frame_id);
 
     // Register frame, main entry point to GenZ-ICP pipeline
     const auto &[planar_points, non_planar_points] = odometry_.RegisterFrame(points, timestamps);
 
-    // Compute the pose using GenZ, ego-centric to the LiDAR
+    // P = T_L0_Lt. Anchor odom at the first accepted output frame B0:
+    // T_B0_Bt = T_B0_L0 * P * T_Lt_Bt. For a rigid mounting this is X * P * X^-1.
+    // Keep the left transform fixed even when base-to-LiDAR TF changes over time.
+    if (!map_to_odom_) map_to_odom_ = cloud_to_base;
     const Sophus::SE3d genz_pose = odometry_.poses().back();
-
-    // If necessary, transform the ego-centric pose to the specified base_link/base_footprint frame
-    const auto pose = [&]() -> Sophus::SE3d {
-        if (egocentric_estimation) return genz_pose;
-        const Sophus::SE3d cloud2base = LookupTransform(base_frame_, cloud_frame_id);
-        return cloud2base * genz_pose * cloud2base.inverse();
-    }();
+    const Sophus::SE3d pose = *map_to_odom_ * genz_pose * cloud_to_base.inverse();
 
     // Spit the current estimated pose to ROS msgs
     PublishOdometry(pose, msg->header.stamp, cloud_frame_id);
     // Publishing this clouds is a bit costly, so do it only if we are debugging
     if (publish_debug_clouds_) {
-        PublishClouds(msg->header.stamp, cloud_frame_id, planar_points, non_planar_points);
+        PublishClouds(msg->header.stamp, *map_to_odom_, planar_points, non_planar_points);
     }
 }
 
@@ -235,46 +234,27 @@ void OdometryServer::PublishOdometry(const Sophus::SE3d &pose,
     nav_msgs::msg::Odometry odom_msg;
     odom_msg.header.stamp = stamp;
     odom_msg.header.frame_id = odom_frame_;
+    odom_msg.child_frame_id = base_frame_.empty() ? cloud_frame_id : base_frame_;
     odom_msg.pose.pose = tf2::sophusToPose(pose);
     odom_publisher_->publish(std::move(odom_msg));
 }
 
 void OdometryServer::PublishClouds(const rclcpp::Time &stamp,
-                                   const std::string &cloud_frame_id,
+                                   const Sophus::SE3d &map_to_odom,
                                    const std::vector<Eigen::Vector3d> &planar_points,
                                    const std::vector<Eigen::Vector3d> &non_planar_points) {
     std_msgs::msg::Header odom_header;
     odom_header.stamp = stamp;
     odom_header.frame_id = odom_frame_;
 
-    // Publish map
+    // The map and both correspondence clouds are already in the internal map
+    // frame L0. Convert all three to odom, independently of TF broadcasting.
     const auto genz_map = odometry_.LocalMap();
-
-    if (!publish_odom_tf_) {
-        // debugging happens in an egocentric world
-        std_msgs::msg::Header cloud_header;
-        cloud_header.stamp = stamp;
-        cloud_header.frame_id = cloud_frame_id;
-
-        map_publisher_->publish(std::move(EigenToPointCloud2(genz_map, odom_header)));
-        planar_points_publisher_->publish(std::move(EigenToPointCloud2(planar_points, cloud_header)));
-        non_planar_points_publisher_->publish(std::move(EigenToPointCloud2(non_planar_points, cloud_header)));
-
-        return;
-    }
-
-    // If transmitting to tf tree we know where the clouds are exactly
-    const auto cloud2odom = LookupTransform(odom_frame_, cloud_frame_id);
-    planar_points_publisher_->publish(std::move(EigenToPointCloud2(planar_points, odom_header)));
-    non_planar_points_publisher_->publish(std::move(EigenToPointCloud2(non_planar_points, odom_header)));
-
-    if (!base_frame_.empty()) {
-        const Sophus::SE3d cloud2base = LookupTransform(base_frame_, cloud_frame_id);
-        map_publisher_->publish(std::move(EigenToPointCloud2(genz_map, cloud2base, odom_header)));
-    } else {
-        map_publisher_->publish(std::move(EigenToPointCloud2(genz_map, odom_header)));
-    }
+    map_publisher_->publish(std::move(EigenToPointCloud2(genz_map, map_to_odom, odom_header)));
+    planar_points_publisher_->publish(std::move(EigenToPointCloud2(planar_points, map_to_odom, odom_header)));
+    non_planar_points_publisher_->publish(std::move(EigenToPointCloud2(non_planar_points, map_to_odom, odom_header)));
 }
+
 }  // namespace genz_icp_ros
 
 #include "rclcpp_components/register_node_macro.hpp"
